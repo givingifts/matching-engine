@@ -1,0 +1,7 @@
+matcher:
+  db_url: "jdbc:mysql://host:3306/database?useSSL=false"
+  db_user: "user"
+  db_pass: "password"
+  max_instances: 10
+  instances_percentage: 100
+  use_script: false

@@ -1,0 +1,1 @@
+echo "Temp script! $1"
