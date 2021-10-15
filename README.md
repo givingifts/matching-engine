@@ -57,6 +57,21 @@ To run the bot with the default configuration, you need to run the following com
 In order to configure Matching engine, create a `matcher.yml` file.   
 There you can set all your credentials.
 
+## How it works
+Matching its done in stages, where there is a "manager" and multiple "matchers" that can either be threads or separate instances.  
+- The manager starts first, getting all matching groups, clearing the temp tables and doing some initialization  
+- Premium matching goes first, doing a single round of matching of all groups except Worldwide.  
+- We then apply the chosen premium behaviour for each user (match with non premium users, match with worldwide premium, drop from the exchange)
+- After that we run worldwide premium matching
+- We then cleanup any Premium user that is not being matched with non-premium users by dropping them from the exchange
+- Matching is then done for each domestic group
+- Some checks and quick fixes are apply after each matching, to match single users and try to make it so users send and receive from different users
+- Any unmatched users are then promoted to their international group
+- Matching is done for all international groups
+- Any unmatched users are then promoted to Worldwide
+- Matching is done for Worldwide
+- At the end we generate some stats and checks for manual review!
+
 ## Built with
 
 This project depends on the following projects, thanks to every developer who makes their code open-source! :heart:
