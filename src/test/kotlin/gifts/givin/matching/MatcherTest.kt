@@ -2,8 +2,9 @@ package gifts.givin.matching
 
 import gifts.givin.matching.common.db.DB
 import gifts.givin.matching.common.domain.MatchingGroup
-import gifts.givin.matching.common.stages.PrepareFirstMatching
+import gifts.givin.matching.common.stages.PrepareMatching
 import gifts.givin.matching.matcher.matchMatchingGroup
+import mu.KotlinLogging
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,6 +14,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 class MatcherTest {
+    val logger = KotlinLogging.logger { }
     companion object {
         @Container
         private val mysqlContainer = MySQLContainer<Nothing>("mysql:latest")
@@ -32,8 +34,12 @@ class MatcherTest {
         insertMatch(2, 2, "USA")
         insertMatch(3, 3, "USA")
 
-        PrepareFirstMatching {}
-        matchMatchingGroup(mutableListOf(MatchingGroup("USA", null)))
+        PrepareMatching(logger) {
+            premium = false
+            worldwide = false
+            groups = false
+        }
+        matchMatchingGroup(mutableListOf(MatchingGroup("USA", null)), logger)
 
         val match1 = getMatch(1)
         val match2 = getMatch(2)
@@ -50,8 +56,12 @@ class MatcherTest {
         insertMatch(1, 1, "USA")
         insertMatch(2, 2, "USA")
 
-        PrepareFirstMatching {}
-        matchMatchingGroup(mutableListOf(MatchingGroup("USA", null)))
+        PrepareMatching(logger) {
+            premium = false
+            worldwide = false
+            groups = false
+        }
+        matchMatchingGroup(mutableListOf(MatchingGroup("USA", null)), logger)
 
         val match1 = getMatch(1)
         val match2 = getMatch(2)
