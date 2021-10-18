@@ -24,13 +24,13 @@ object NoMatchBehaviour : Stage<NoMatchBehaviourOptions> {
         for (user in unmatchedUsers) {
             when (user.noMatchBehaviour) {
                 NoMatchBehaviour.DROP -> dropUser(user)
-                NoMatchBehaviour.INTERNATIONAL_WORLDWIDE -> if(isInternationalMatch(user)) {
+                NoMatchBehaviour.INTERNATIONAL_WORLDWIDE -> if (isInternationalMatch(user)) {
                     upgradeToWorldwide(user)
                 } else {
                     promoteUser(user)
                 }
                 NoMatchBehaviour.WORLDWIDE -> upgradeToWorldwide(user)
-                NoMatchBehaviour.INTERNATIONAL_DROP -> if(isInternationalMatch(user)) {
+                NoMatchBehaviour.INTERNATIONAL_DROP -> if (isInternationalMatch(user)) {
                     dropUser(user)
                 } else {
                     promoteUser(user)
@@ -53,12 +53,12 @@ object NoMatchBehaviour : Stage<NoMatchBehaviourOptions> {
 
         usersToPromote.forEach { (matchingGroup, users) ->
             val parent = options.groups.firstOrNull { it.id == matchingGroup }?.parent
-            if(parent != null) {
+            if (parent != null) {
                 transaction {
                     MatchesTable.update({
                         (MatchesTable.isDropped eq false) and
-                                (MatchesTable.userId inList users) and
-                                (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
+                            (MatchesTable.userId inList users) and
+                            (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
                     }) {
                         it[MatchesTable.currentMatchingGroup] = parent
                     }
@@ -86,10 +86,8 @@ object NoMatchBehaviour : Stage<NoMatchBehaviourOptions> {
 
     private fun getUnmatchedUsers() = transaction {
         MatchesTable.select {
-                    MatchesTable.currentMatchingGroup.isNotNull() and
-                    (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
+            MatchesTable.currentMatchingGroup.isNotNull() and
+                (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
         }.mapToMatch()
-
     }
-
 }

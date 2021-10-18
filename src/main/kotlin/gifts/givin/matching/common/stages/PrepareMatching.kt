@@ -21,11 +21,11 @@ object PrepareMatching : Stage<PrepareMatchingOptions> {
         transaction {
             MatchesTable.update({
                 (MatchesTable.isDropped eq false) and
-                        (MatchesTable.isUpgradedToWorldwide eq false) and
-                        MatchesTable.currentMatchingGroup.isNull() and
-                        ifCondition(options.premium) { MatchesTable.isPremium eq true } and
-                        ifCondition(!options.worldwide) { MatchesTable.originalMatchingGroup neq "Worldwide" } and
-                        ifCondition(!options.groups) { MatchesTable.originalMatchingGroup notLike "Group %" }
+                    (MatchesTable.isUpgradedToWorldwide eq false) and
+                    MatchesTable.currentMatchingGroup.isNull() and
+                    ifCondition(options.premium) { MatchesTable.isPremium eq true } and
+                    ifCondition(!options.worldwide) { MatchesTable.originalMatchingGroup neq "Worldwide" } and
+                    ifCondition(!options.groups) { MatchesTable.originalMatchingGroup notLike "Group %" }
             }) {
                 it[MatchesTable.currentMatchingGroup] = MatchesTable.originalMatchingGroup
             }

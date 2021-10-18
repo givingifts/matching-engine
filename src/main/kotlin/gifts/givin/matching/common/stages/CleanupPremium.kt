@@ -12,8 +12,8 @@ object CleanupPremium : Stage<Unit> {
         transaction {
             MatchesTable.update({
                 (MatchesTable.isPremium eq true) and
-                        (MatchesTable.premiumNoMatchBehaviour neq PremiumNoMatchBehaviour.STANDARD) and
-                        (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
+                    (MatchesTable.premiumNoMatchBehaviour neq PremiumNoMatchBehaviour.STANDARD) and
+                    (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
             }) {
                 it[MatchesTable.currentMatchingGroup] = null
                 it[MatchesTable.isDropped] = true

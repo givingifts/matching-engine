@@ -63,7 +63,7 @@ fun main() {
 }
 
 private fun matchingRound() {
-    if(!matchPremium && matchWorldwide) {
+    if (!matchPremium && matchWorldwide) {
         PrepareWorldwideMatching(logger) {}
     } else {
         PrepareMatching(logger) {

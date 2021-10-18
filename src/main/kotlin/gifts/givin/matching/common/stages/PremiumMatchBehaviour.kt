@@ -22,7 +22,7 @@ object PremiumNoMatchBehaviour : Stage<PremiumNoMatchBehaviourOptions> {
 
         val unmatchedUsers = getUnmatchedUsers()
         for (user in unmatchedUsers) {
-            if(user.currentMatchingGroup == "Worldwide") {
+            if (user.currentMatchingGroup == "Worldwide") {
                 dropUser(user)
             } else {
                 when (user.premiumNoMatchBehaviour) {
@@ -67,9 +67,8 @@ object PremiumNoMatchBehaviour : Stage<PremiumNoMatchBehaviourOptions> {
 
     private fun getUnmatchedUsers() = transaction {
         MatchesTable.select {
-                    MatchesTable.currentMatchingGroup.isNotNull() and
-                    (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
+            MatchesTable.currentMatchingGroup.isNotNull() and
+                (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull())
         }.mapToMatch()
-
     }
 }
