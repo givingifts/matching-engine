@@ -10,7 +10,9 @@ data class Match(
     val originalMatchingGroup: String,
     val isPremium: Boolean,
     val isDropped: Boolean,
-    val premiumBehaviour: PremiumBehaviour?,
+    val isUpgradedToWorldwide: Boolean,
+    val noMatchBehaviour: NoMatchBehaviour,
+    val premiumNoMatchBehaviour: PremiumNoMatchBehaviour?,
     val sendTo: Int?,
     val receiveFrom: Int?
 )
@@ -23,7 +25,9 @@ fun Query.mapToMatch() = map {
         it[MatchesTable.originalMatchingGroup],
         it[MatchesTable.isPremium],
         it[MatchesTable.isDropped],
-        it[MatchesTable.premiumBehaviour],
+        it[MatchesTable.isUpgradedToWorldwide],
+        it[MatchesTable.noMatchBehaviour],
+        it[MatchesTable.premiumNoMatchBehaviour],
         it[MatchesTable.sendTo],
         it[MatchesTable.receiveFrom],
     )

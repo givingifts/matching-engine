@@ -2,8 +2,9 @@ package gifts.givin.matching
 
 import gifts.givin.matching.common.db.MatchesTable
 import gifts.givin.matching.common.db.MatchingGroupTable
-import gifts.givin.matching.common.domain.PremiumBehaviour
+import gifts.givin.matching.common.domain.NoMatchBehaviour
 import gifts.givin.matching.common.domain.mapToMatch
+import gifts.givin.matching.common.domain.PremiumNoMatchBehaviour
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -24,7 +25,8 @@ fun insertMatch(
     matchSendTo: Int? = null,
     matchReceiveFrom: Int? = null,
     matchIsPremium: Boolean = false,
-    matchPremiumBehaviour: PremiumBehaviour? = null,
+    matchNoMatchBehaviour: NoMatchBehaviour = NoMatchBehaviour.INTERNATIONAL_WORLDWIDE,
+    matchPremiumNoMatchBehaviour: PremiumNoMatchBehaviour? = null,
     matchCurrentMatchingGroups: String? = null
 ) = transaction {
     MatchesTable.insert {
@@ -35,7 +37,8 @@ fun insertMatch(
         it[sendTo] = matchSendTo
         it[receiveFrom] = matchReceiveFrom
         it[isPremium] = matchIsPremium
-        it[premiumBehaviour] = matchPremiumBehaviour
+        it[noMatchBehaviour] = matchNoMatchBehaviour
+        it[premiumNoMatchBehaviour] = matchPremiumNoMatchBehaviour
     }
 }
 

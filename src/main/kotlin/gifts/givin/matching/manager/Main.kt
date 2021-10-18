@@ -8,9 +8,10 @@ import gifts.givin.matching.common.getConfig
 import gifts.givin.matching.common.stages.CleanupInstances
 import gifts.givin.matching.common.stages.CleanupPremium
 import gifts.givin.matching.common.stages.DoChecks
-import gifts.givin.matching.common.stages.PremiumBehaviour
+import gifts.givin.matching.common.stages.NoMatchBehaviour
+import gifts.givin.matching.common.stages.PremiumNoMatchBehaviour
 import gifts.givin.matching.common.stages.PrepareMatching
-import gifts.givin.matching.common.stages.PromoteMatchingGroups
+import gifts.givin.matching.common.stages.PrepareWorldwideMatching
 import gifts.givin.matching.common.stages.StartMatcher
 import gifts.givin.matching.common.stages.WaitForMatchers
 import mu.KotlinLogging
@@ -22,11 +23,11 @@ import kotlin.system.measureTimeMillis
 private val logger = KotlinLogging.logger("Manager")
 
 lateinit var config: Config
-var shouldMatchWorldwide = false
-var shouldMatchGroups = false
 
+var matchPremium = true
+var matchWorldwide = false
+var matchGroups = true
 fun main() {
-    var unmatchedUsers = 0L
     val time = measureTimeMillis {
         logger.info { "Starting Matching manager" }
         config = getConfig()
@@ -35,78 +36,50 @@ fun main() {
         logger.info { "Initialization complete" }
 
         CleanupInstances(logger) {}
-        PrepareMatching(logger) {
-            premium = true
-            worldwide = false
-            groups = true
+        matchingRound()
+        PremiumNoMatchBehaviour(logger) {
+            groups = allMatchingGroups
         }
-        StartMatcher(logger) {
-            maxInstances = config[MatcherSpec.max_instances]
-            percentageInstances = config[MatcherSpec.instances_percentage]
-            useScript = config[MatcherSpec.use_script]
-            groups = DB.getMatchingGroups()
-        }
-        WaitForMatchers(logger) {}
-        CleanupInstances(logger) {}
-        PremiumBehaviour(logger) {}
-        PrepareMatching(logger) {
-            premium = true
-            worldwide = true
-            groups = true
-        }
-        StartMatcher(logger) {
-            maxInstances = config[MatcherSpec.max_instances]
-            percentageInstances = config[MatcherSpec.instances_percentage]
-            useScript = config[MatcherSpec.use_script]
-            groups = DB.getMatchingGroups()
-        }
-        WaitForMatchers(logger) {}
-        CleanupInstances(logger) {}
+        matchWorldwide = true
+        matchingRound()
         CleanupPremium(logger) {}
-        PrepareMatching(logger) {
-            premium = false
-            worldwide = false
-            groups = false
+        matchPremium = false
+        matchWorldwide = false
+        matchGroups = false
+        matchingRound()
+        NoMatchBehaviour(logger) {
+            groups = allMatchingGroups
         }
-        do {
-            val matchingGroups = DB.getMatchingGroups()
-            if (matchingGroups.isEmpty()) {
-                prepareNextMatching()
-            }
-            StartMatcher(logger) {
-                maxInstances = config[MatcherSpec.max_instances]
-                percentageInstances = config[MatcherSpec.instances_percentage]
-                useScript = config[MatcherSpec.use_script]
-                groups = matchingGroups
-            }
-            WaitForMatchers(logger) {}
-            CleanupInstances(logger) {}
-            PromoteMatchingGroups(logger) {
-                groups = allMatchingGroups
-            }
-            unmatchedUsers = getUnmatchedUsers()
-        } while (unmatchedUsers > 0)
+        matchGroups = true
+        matchingRound()
+        NoMatchBehaviour(logger) {
+            groups = allMatchingGroups
+        }
+        matchWorldwide = true
+        matchingRound()
     }
-    logger.info { "Matching complete with $unmatchedUsers unmatched users. Time taken: $time ms" }
+    logger.info { "Matching complete with ${getUnmatchedUsers()} unmatched users. Time taken: $time ms" }
     DoChecks(logger) {}
 }
 
-fun prepareNextMatching() {
-    if (!shouldMatchGroups) {
-        shouldMatchGroups = true
+private fun matchingRound() {
+    if(!matchPremium && matchWorldwide) {
+        PrepareWorldwideMatching(logger) {}
+    } else {
         PrepareMatching(logger) {
-            premium = false
-            worldwide = false
-            groups = true
-        }
-    } else if (!shouldMatchWorldwide) {
-        shouldMatchWorldwide = true
-        PrepareMatching(logger) {
-            premium = false
-            worldwide = true
-            groups = true
+            premium = matchPremium
+            worldwide = matchWorldwide
+            groups = matchGroups
         }
     }
+    StartMatcher(logger) {
+        maxInstances = config[MatcherSpec.max_instances]
+        percentageInstances = config[MatcherSpec.instances_percentage]
+        useScript = config[MatcherSpec.use_script]
+        groups = DB.getMatchingGroups()
+    }
+    WaitForMatchers(logger) {}
+    CleanupInstances(logger) {}
 }
 
 private fun getUnmatchedUsers() = transaction {

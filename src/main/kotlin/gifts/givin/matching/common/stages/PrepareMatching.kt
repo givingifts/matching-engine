@@ -17,12 +17,15 @@ object PrepareMatching : Stage<PrepareMatchingOptions> {
     override fun run(func: PrepareMatchingOptions.() -> Unit) {
         val options = PrepareMatchingOptions()
         func(options)
+
         transaction {
             MatchesTable.update({
                 (MatchesTable.isDropped eq false) and
-                    ifCondition(options.premium) { MatchesTable.isPremium eq true } and
-                    ifCondition(!options.worldwide) { MatchesTable.originalMatchingGroup neq "Worldwide" } and
-                    ifCondition(!options.groups) { MatchesTable.originalMatchingGroup notLike "Group %" }
+                        (MatchesTable.isUpgradedToWorldwide eq false) and
+                        MatchesTable.currentMatchingGroup.isNull() and
+                        ifCondition(options.premium) { MatchesTable.isPremium eq true } and
+                        ifCondition(!options.worldwide) { MatchesTable.originalMatchingGroup neq "Worldwide" } and
+                        ifCondition(!options.groups) { MatchesTable.originalMatchingGroup notLike "Group %" }
             }) {
                 it[MatchesTable.currentMatchingGroup] = MatchesTable.originalMatchingGroup
             }

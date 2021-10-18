@@ -37,7 +37,7 @@ object DoChecks : Stage<Unit> {
             MatchingGroupTable.selectAll().count()
         }
         val usedMatchingGroups = transaction {
-            MatchesTable.selectAll().groupBy(MatchesTable.originalMatchingGroup).count()
+            MatchesTable.slice(MatchesTable.originalMatchingGroup).selectAll().groupBy(MatchesTable.originalMatchingGroup).count()
         }
         val droppedUsersWithMatch = transaction {
             MatchesTable.select { (MatchesTable.isDropped eq true) and (MatchesTable.sendTo.isNotNull() or MatchesTable.receiveFrom.isNotNull()) }

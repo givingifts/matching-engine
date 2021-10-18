@@ -1,6 +1,7 @@
 package gifts.givin.matching.common.db
 
-import gifts.givin.matching.common.domain.PremiumBehaviour
+import gifts.givin.matching.common.domain.NoMatchBehaviour
+import gifts.givin.matching.common.domain.PremiumNoMatchBehaviour
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Table
 
@@ -14,10 +15,17 @@ object Matches : IntIdTable() {
     val originalMatchingGroup = varchar("OriginalMatchingGroup", 10)
     val isPremium = bool("IsPremium").default(false)
     val isDropped = bool("IsDropped").default(false)
-    val premiumBehaviour = customEnumeration(
-        "PremiumBehaviour",
-        "ENUM('WORLDWIDE', 'NONPREMIUM', 'DROP')",
-        { value -> PremiumBehaviour.valueOf(value as String) },
+    val isUpgradedToWorldwide = bool("IsUpgradedToWorldwide").default(false)
+    val noMatchBehaviour = customEnumeration(
+        "NoMatchBehaviour",
+        "ENUM('DROP', 'INTERNATIONAL_WORLDWIDE', 'WORLDWIDE', 'INTERNATIONAL_DROP')",
+        { value -> NoMatchBehaviour.valueOf(value as String) },
+        { it.toString() }
+    )
+    val premiumNoMatchBehaviour = customEnumeration(
+        "PremiumNoMatchBehaviour",
+        "ENUM('DROP', 'STANDARD', 'WORLDWIDE')",
+        { value -> PremiumNoMatchBehaviour.valueOf(value as String) },
         { it.toString() }
     ).nullable().default(null)
     val sendTo = integer("SendTo").nullable()

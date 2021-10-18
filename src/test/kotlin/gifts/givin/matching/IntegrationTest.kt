@@ -33,6 +33,6 @@ class IntegrationTest {
         matches.forEach {
             assertValidMatch(it)
         }
-        assertEquals(1, matches.count { it.isDropped })
+        assertEquals(2, matches.count { it.isDropped })
     }
 }
