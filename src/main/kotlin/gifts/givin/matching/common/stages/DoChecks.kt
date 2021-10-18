@@ -25,10 +25,10 @@ object DoChecks : Stage<Unit> {
             MatchesTable.select { MatchesTable.sendTo eq MatchesTable.receiveFrom }.count()
         }
         val usersWithoutSendTo = transaction {
-            MatchesTable.select { MatchesTable.sendTo.isNull() and (MatchesTable.isDropped eq false) }.count()
+            MatchesTable.select { MatchesTable.sendTo.isNull() }.count()
         }
         val usersWithoutReceiveFrom = transaction {
-            MatchesTable.select { MatchesTable.receiveFrom.isNull() and (MatchesTable.isDropped eq false) }.count()
+            MatchesTable.select { MatchesTable.receiveFrom.isNull() }.count()
         }
         val totalUsers = transaction {
             MatchesTable.selectAll().count()
