@@ -11,8 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 class IntegrationTest {
     companion object {
-        @Container
-        private val mysqlContainer = MySQLContainer<Nothing>("mysql:latest")
+        private val mysqlContainer: MySQLContainer<Nothing> = MySQLContainerWrapper.getContainer()
     }
 
     @Test

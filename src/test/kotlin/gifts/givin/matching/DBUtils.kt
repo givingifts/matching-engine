@@ -2,6 +2,7 @@ package gifts.givin.matching
 
 import gifts.givin.matching.common.db.MatchesTable
 import gifts.givin.matching.common.db.MatchingGroupTable
+import gifts.givin.matching.common.db.MatchingInstancesTable
 import gifts.givin.matching.common.domain.NoMatchBehaviour
 import gifts.givin.matching.common.domain.mapToMatch
 import gifts.givin.matching.common.domain.PremiumNoMatchBehaviour
@@ -65,4 +66,5 @@ fun initSchema() {
 fun clean() = transaction {
     MatchesTable.deleteAll()
     MatchingGroupTable.deleteAll()
+    MatchingInstancesTable.deleteAll()
 }
