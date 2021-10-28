@@ -12,6 +12,7 @@ import gifts.givin.matching.common.stages.NoMatchBehaviour
 import gifts.givin.matching.common.stages.PremiumNoMatchBehaviour
 import gifts.givin.matching.common.stages.PrepareMatching
 import gifts.givin.matching.common.stages.PrepareWorldwideMatching
+import gifts.givin.matching.common.stages.SendDiscordMessage
 import gifts.givin.matching.common.stages.StartMatcher
 import gifts.givin.matching.common.stages.WaitForMatchers
 import mu.KotlinLogging
@@ -27,7 +28,7 @@ lateinit var config: Config
 var matchPremium = true
 var matchWorldwide = false
 var matchGroups = true
-fun main() {
+fun main(args: Array<String>) {
     val time = measureTimeMillis {
         logger.info { "Starting Matching manager" }
         config = getConfig()
@@ -35,6 +36,12 @@ fun main() {
         val allMatchingGroups = DB.getAllMatchingGroups()
         logger.info { "Initialization complete" }
 
+        if(config[MatcherSpec.hook].isNotBlank() && args.isNotEmpty()) {
+            SendDiscordMessage(logger) {
+                url = config[MatcherSpec.hook]
+                exchange = args.joinToString(" ")
+            }
+        }
         CleanupInstances(logger) {}
         matchingRound()
         PremiumNoMatchBehaviour(logger) {
