@@ -16,4 +16,5 @@ object MatcherSpec : ConfigSpec() {
     val max_instances by optional(10)
     val instances_percentage by optional(50)
     val use_script by optional(false)
+    val hook by optional("")
 }

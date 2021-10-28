@@ -2,7 +2,7 @@
 .PHONY: clean buildManager buildMatcher build
 
 run:
-	./out/manager/bin/matching-engine
+	./out/manager/bin/matching-engine $(exchange)
 clean:
 	rm -rf out/
 	./gradlew clean

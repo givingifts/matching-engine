@@ -24,7 +24,6 @@ abstract class StageTest {
         }
     }
 
-
     @BeforeEach
     fun setup() {
         DB.connect("${mysqlContainer.jdbcUrl}?useSSL=false", mysqlContainer.username, mysqlContainer.password)
