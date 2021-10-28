@@ -6,7 +6,7 @@ object MySQLContainerWrapper {
     private var container: MySQLContainer<Nothing>? = null
 
     fun getContainer(): MySQLContainer<Nothing> {
-        if(container == null) {
+        if (container == null) {
             container = MySQLContainer<Nothing>("mysql:latest").withReuse(true)
             container!!.start()
         }

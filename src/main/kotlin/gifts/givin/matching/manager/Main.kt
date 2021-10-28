@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
         val allMatchingGroups = DB.getAllMatchingGroups()
         logger.info { "Initialization complete" }
 
-        if(config[MatcherSpec.hook].isNotBlank() && args.isNotEmpty()) {
+        if (config[MatcherSpec.hook].isNotBlank() && args.isNotEmpty()) {
             SendDiscordMessage(logger) {
                 url = config[MatcherSpec.hook]
                 exchange = args.joinToString(" ")
