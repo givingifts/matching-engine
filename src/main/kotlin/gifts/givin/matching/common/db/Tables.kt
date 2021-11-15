@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.Table
 typealias MatchesTable = Matches
 typealias MatchingGroupTable = MatchingGroup
 typealias MatchingInstancesTable = MatchingInstances
+typealias DoNotMatchTable = DoNotMatch
 
 object Matches : IntIdTable() {
     val userId = integer("UserId")
@@ -41,4 +42,9 @@ object MatchingGroup : Table() {
 object MatchingInstances : IntIdTable() {
     val done = bool("Done").default(false)
     val matchingGroups = text("MatchingGroups").nullable()
+}
+
+object DoNotMatch : IntIdTable() {
+    val firstUserId = integer("FirstUserId")
+    val secondUserId = integer("SecondUserId")
 }

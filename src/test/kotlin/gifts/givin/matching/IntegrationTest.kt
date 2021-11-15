@@ -26,7 +26,7 @@ class IntegrationTest {
         System.setProperty("matcher.use_script", "false")
         DB.connect("${mysqlContainer.jdbcUrl}?useSSL=false", mysqlContainer.username, mysqlContainer.password)
         initSchema()
-        main()
+        main(emptyArray())
         val matches = getAllMatches()
         matches.forEach {
             assertValidMatch(it)

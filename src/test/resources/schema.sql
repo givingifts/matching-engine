@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS Matches;
+DROP TABLE IF EXISTS DoNotMatch;
 DROP TABLE IF EXISTS MatchingGroup;
 DROP TABLE IF EXISTS MatchingInstances;
 
@@ -18,6 +19,14 @@ CREATE TABLE Matches
     CONSTRAINT PK_Matches PRIMARY KEY (id),
     CHECK (SendTo <> UserId),
     CHECK (ReceiveFrom <> UserId)
+);
+
+CREATE TABLE DoNotMatch
+(
+    id           bigint UNIQUE NOT NULL AUTO_INCREMENT,
+    FirstUserId  bigint        NOT NULL,
+    SecondUserId bigint        NOT NULL,
+    CHECK (FirstUserId <> SecondUserId)
 );
 
 CREATE TABLE MatchingGroup
@@ -47,6 +56,12 @@ CREATE INDEX idx_user_id
 CREATE INDEX idx_send_to
     ON Matches (SendTo);
 
+CREATE INDEX idx_first_user_id
+    ON DoNotMatch (FirstUserId);
+
+CREATE INDEX idx_second_user_id
+    ON DoNotMatch (SecondUserId);
+
 INSERT INTO MatchingGroup (id, Parent)
 VALUES ('ES', 'Worldwide');
 INSERT INTO MatchingGroup (id, Parent)
@@ -69,6 +84,8 @@ INSERT INTO MatchingGroup (id, Parent)
 VALUES ('Test3', 'Group 3');
 INSERT INTO MatchingGroup (id, Parent)
 VALUES ('Test4', 'Group 3');
+INSERT INTO MatchingGroup (id, Parent)
+VALUES ('Test5', 'Worldwide');
 
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
 VALUES (1, 'ES', NULL, NULL, 'INTERNATIONAL_WORLDWIDE');
@@ -137,3 +154,9 @@ INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatch
 VALUES (29, 'Test3', NULL, NULL, 'INTERNATIONAL_DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
 VALUES (30, 'Test4', NULL, NULL, 'WORLDWIDE');
+INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
+VALUES (31, 'Test5', NULL, NULL, 'DROP');
+INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
+VALUES (32, 'Test5', NULL, NULL, 'DROP');
+INSERT INTO DoNotMatch (FirstUserId, SecondUserId)
+VALUES(31, 32)

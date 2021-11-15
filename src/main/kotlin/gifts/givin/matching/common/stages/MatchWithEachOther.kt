@@ -1,12 +1,15 @@
 package gifts.givin.matching.common.stages
 
+import gifts.givin.matching.common.db.DoNotMatchTable
 import gifts.givin.matching.common.db.Matches
 import gifts.givin.matching.common.db.MatchesTable
 import gifts.givin.matching.common.domain.Match
 import gifts.givin.matching.common.domain.MatchingGroup
 import gifts.givin.matching.common.domain.mapToMatch
 import gifts.givin.matching.common.randomAndRemove
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -127,5 +130,24 @@ object MatchWithEachOther : Stage<MatchWithEachOtherOptions> {
         MatchesTable
             .select { MatchesTable.sendTo.isNotNull() and (MatchesTable.isPremium eq true) and (MatchesTable.currentMatchingGroup eq matchingGroup) }
             .mapToMatch()
+    }
+
+    private fun usersCantBeMatched(matchingGroup: String): Boolean {
+        val users = transaction {
+            MatchesTable.select {
+                (MatchesTable.sendTo.isNull()) and (MatchesTable.currentMatchingGroup eq matchingGroup)
+            }.mapToMatch()
+        }
+
+        return doNotMatch(users.first().userId, users.last().userId)
+    }
+
+    private fun doNotMatch(firstUser: Int, secondUser: Int): Boolean {
+        return transaction {
+            DoNotMatchTable.select {
+                (DoNotMatchTable.firstUserId.eq(firstUser) and DoNotMatchTable.secondUserId.eq(secondUser)) or
+                    (DoNotMatchTable.secondUserId.eq(firstUser) and DoNotMatchTable.firstUserId.eq(secondUser))
+            }.count() != 0L
+        }
     }
 }

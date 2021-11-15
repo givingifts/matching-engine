@@ -1,10 +1,13 @@
 package gifts.givin.matching.common.stages
 
+import gifts.givin.matching.common.db.DoNotMatchTable
 import gifts.givin.matching.common.db.MatchesTable
 import gifts.givin.matching.common.db.MatchingGroupTable
 import gifts.givin.matching.common.domain.mapToMatch
 import mu.KotlinLogging
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -43,6 +46,30 @@ object DoChecks : Stage<Unit> {
             MatchesTable.select { (MatchesTable.isDropped eq true) and (MatchesTable.sendTo.isNotNull() or MatchesTable.receiveFrom.isNotNull()) }
                 .mapToMatch()
         }
+        val usersWithDoNotMatchThatMatched = transaction {
+            MatchesTable.select {
+                exists(
+                    DoNotMatchTable.slice(DoNotMatchTable.firstUserId).select {
+                        DoNotMatchTable.firstUserId.eq(MatchesTable.userId) and DoNotMatchTable.secondUserId.eq(MatchesTable.sendTo)
+                    }
+                ) or
+                    exists(
+                        DoNotMatchTable.slice(DoNotMatchTable.secondUserId).select {
+                            DoNotMatchTable.secondUserId.eq(MatchesTable.userId) and DoNotMatchTable.firstUserId.eq(MatchesTable.sendTo)
+                        }
+                    ) or
+                    exists(
+                        DoNotMatchTable.slice(DoNotMatchTable.firstUserId).select {
+                            DoNotMatchTable.firstUserId.eq(MatchesTable.userId) and DoNotMatchTable.secondUserId.eq(MatchesTable.receiveFrom)
+                        }
+                    ) or
+                    exists(
+                        DoNotMatchTable.slice(DoNotMatchTable.secondUserId).select {
+                            DoNotMatchTable.secondUserId.eq(MatchesTable.userId) and DoNotMatchTable.firstUserId.eq(MatchesTable.receiveFrom)
+                        }
+                    )
+            }.mapToMatch()
+        }
         transaction {
             "SELECT m1.*, m2.IsPremium As matchIsPremium FROM Matches m1 JOIN Matches m2 ON m1.ReceiveFrom = m2.UserId WHERE m1.IsPremium = 1 AND m2.isPremium = false;".execAndMap { rs ->
                 logger.info {
@@ -63,6 +90,9 @@ object DoChecks : Stage<Unit> {
         logger.info { "Dropped users: $droppedUsers" }
         droppedUsersWithMatch.forEach {
             logger.info { "Warning: ${it.userId} has been dropped but they are supposed to send to ${it.sendTo} and/or receive from ${it.receiveFrom}" }
+        }
+        usersWithDoNotMatchThatMatched.forEach {
+            logger.info { "Warning: ${it.userId} has been matched with someone in their do not match list!" }
         }
     }
 }

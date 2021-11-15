@@ -1,5 +1,6 @@
 package gifts.givin.matching
 
+import gifts.givin.matching.common.db.DoNotMatchTable
 import gifts.givin.matching.common.db.MatchesTable
 import gifts.givin.matching.common.db.MatchingGroupTable
 import gifts.givin.matching.common.db.MatchingInstancesTable
@@ -40,6 +41,13 @@ fun insertMatch(
         it[isPremium] = matchIsPremium
         it[noMatchBehaviour] = matchNoMatchBehaviour
         it[premiumNoMatchBehaviour] = matchPremiumNoMatchBehaviour
+    }
+}
+
+fun insertDoNotMatch(user1: Int, user2: Int) = transaction {
+    DoNotMatchTable.insert {
+        it[firstUserId] = user1
+        it[secondUserId] = user2
     }
 }
 
