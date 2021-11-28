@@ -12,8 +12,8 @@ typealias DoNotMatchTable = DoNotMatch
 
 object Matches : IntIdTable() {
     val userId = integer("UserId")
-    val currentMatchingGroup = varchar("CurrentMatchingGroup", 10).nullable().default(null)
-    val originalMatchingGroup = varchar("OriginalMatchingGroup", 10)
+    val currentMatchingGroup = varchar("CurrentMatchingGroup", 40).nullable().default(null)
+    val originalMatchingGroup = varchar("OriginalMatchingGroup", 40)
     val isPremium = bool("IsPremium").default(false)
     val isDropped = bool("IsDropped").default(false)
     val isUpgradedToWorldwide = bool("IsUpgradedToWorldwide").default(false)
@@ -34,8 +34,8 @@ object Matches : IntIdTable() {
 }
 
 object MatchingGroup : Table() {
-    val id = varchar("id", 10)
-    val parent = varchar("Parent", 10).nullable()
+    val id = varchar("id", 40)
+    val parent = varchar("Parent", 40).nullable()
     override val primaryKey = PrimaryKey(id, name = "PK_MatchingGroup")
 }
 
