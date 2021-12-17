@@ -127,16 +127,16 @@ INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatch
 VALUES (19, 'UK', NULL, NULL, 'INTERNATIONAL_WORLDWIDE');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, IsPremium, NoMatchBehaviour,
                      PremiumNoMatchBehaviour)
-VALUES (20, 'UK', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'DROP');
+VALUES (20, 'UK', NULL, NULL, true, 'INTERNATIONAL_DROP', 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, IsPremium, NoMatchBehaviour,
                      PremiumNoMatchBehaviour)
 VALUES (21, 'Worldwide', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, IsPremium, NoMatchBehaviour,
                      PremiumNoMatchBehaviour)
-VALUES (22, 'Group 1', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'WORLDWIDE');
+VALUES (22, 'Group 1', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, IsPremium, NoMatchBehaviour,
                      PremiumNoMatchBehaviour)
-VALUES (23, 'Test', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'WORLDWIDE');
+VALUES (23, 'Test', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, IsPremium, NoMatchBehaviour,
                      PremiumNoMatchBehaviour)
 VALUES (24, 'ES', NULL, NULL, true, 'INTERNATIONAL_WORLDWIDE', 'STANDARD');

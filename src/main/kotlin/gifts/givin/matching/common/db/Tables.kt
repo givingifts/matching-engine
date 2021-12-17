@@ -25,7 +25,7 @@ object Matches : IntIdTable() {
     )
     val premiumNoMatchBehaviour = customEnumeration(
         "PremiumNoMatchBehaviour",
-        "ENUM('DROP', 'STANDARD', 'WORLDWIDE')",
+        "ENUM('DROP', 'STANDARD')",
         { value -> PremiumNoMatchBehaviour.valueOf(value as String) },
         { it.toString() }
     ).nullable().default(null)
