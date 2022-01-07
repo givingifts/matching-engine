@@ -9,6 +9,7 @@ CREATE TABLE Matches
     UserId                  bigint UNIQUE NOT NULL,
     OriginalMatchingGroup   varchar(10)   NOT NULL,
     CurrentMatchingGroup    varchar(10)                            DEFAULT NULL,
+    Level                   bigint                                 DEFAULT 1,
     IsPremium               boolean                                DEFAULT FALSE,
     IsDropped               boolean                                DEFAULT FALSE,
     IsUpgradedToWorldwide   boolean                                DEFAULT FALSE,
@@ -38,9 +39,9 @@ CREATE TABLE MatchingGroup
 
 CREATE TABLE MatchingInstances
 (
-    id             bigint UNIQUE NOT NULL AUTO_INCREMENT,
-    done           BOOLEAN default FALSE,
-    matchingGroups text    default NULL,
+    id            bigint UNIQUE NOT NULL AUTO_INCREMENT,
+    done          BOOLEAN     default FALSE,
+    matchingGroup varchar(10) default NULL,
     CONSTRAINT PK_MatchingInstances PRIMARY KEY (id)
 );
 
@@ -159,4 +160,4 @@ VALUES (31, 'Test5', NULL, NULL, 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
 VALUES (32, 'Test5', NULL, NULL, 'DROP');
 INSERT INTO DoNotMatch (FirstUserId, SecondUserId)
-VALUES(31, 32)
+VALUES (31, 32)

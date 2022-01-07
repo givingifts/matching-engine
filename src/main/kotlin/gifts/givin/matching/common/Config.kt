@@ -14,7 +14,5 @@ object MatcherSpec : ConfigSpec() {
     val db_user by optional("matching")
     val db_pass by optional("matching")
     val max_instances by optional(10)
-    val instances_percentage by optional(50)
     val use_script by optional(false)
-    val hook by optional("")
 }

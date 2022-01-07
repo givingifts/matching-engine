@@ -7,22 +7,16 @@ PRIVILEGES;
 
 DROP TABLE IF EXISTS Matches;
 DROP TABLE IF EXISTS DoNotMatch;
-DROP TABLE IF EXISTS MatchingGroup;
 DROP TABLE IF EXISTS MatchingInstances;
 
 CREATE TABLE Matches
 (
-    id                      bigint UNIQUE NOT NULL AUTO_INCREMENT,
-    UserId                  bigint UNIQUE NOT NULL,
-    OriginalMatchingGroup   varchar(10)   NOT NULL,
-    CurrentMatchingGroup    varchar(10) DEFAULT NULL,
-    IsPremium               boolean     DEFAULT FALSE,
-    IsDropped               boolean     DEFAULT FALSE,
-    IsUpgradedToWorldwide   boolean     DEFAULT FALSE,
-    NoMatchBehaviour        ENUM ('DROP', 'INTERNATIONAL_WORLDWIDE', 'WORLDWIDE', 'INTERNATIONAL_DROP'),
-    PremiumNoMatchBehaviour ENUM ('DROP', 'STANDARD', 'WORLDWIDE') DEFAULT NULL,
-    SendTo                  bigint,
-    ReceiveFrom             bigint,
+    id            bigint UNIQUE NOT NULL AUTO_INCREMENT,
+    UserId        bigint UNIQUE NOT NULL,
+    MatchingGroup varchar(40)   NOT NULL,
+    IsMatched     boolean DEFAULT FALSE,
+    SendTo        bigint,
+    ReceiveFrom   bigint,
     CONSTRAINT PK_Matches PRIMARY KEY (id),
     CHECK (SendTo <> UserId),
     CHECK (ReceiveFrom <> UserId)
@@ -36,26 +30,16 @@ CREATE TABLE DoNotMatch
     CHECK (FirstUserId <> SecondUserId)
 );
 
-CREATE TABLE MatchingGroup
-(
-    id     varchar(10) UNIQUE NOT NULL,
-    Parent varchar(10),
-    CONSTRAINT PK_MatchingGroup PRIMARY KEY (id)
-);
-
 CREATE TABLE MatchingInstances
 (
-    id             bigint UNIQUE NOT NULL AUTO_INCREMENT,
-    done           BOOLEAN default FALSE,
-    matchingGroups text    default NULL,
+    id            bigint UNIQUE NOT NULL AUTO_INCREMENT,
+    done          BOOLEAN     default FALSE,
+    matchingGroup varchar(10) default NULL,
     CONSTRAINT PK_MatchingInstances PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_original_matching_group
-    ON Matches (OriginalMatchingGroup);
-
-CREATE INDEX idx_current_matching_group
-    ON Matches (CurrentMatchingGroup);
+CREATE INDEX idx_matching_group
+    ON Matches (MatchingGroup);
 
 CREATE INDEX idx_user_id
     ON Matches (UserId);
@@ -166,4 +150,4 @@ VALUES (31, 'Test5', NULL, NULL, 'DROP');
 INSERT INTO Matches (UserId, OriginalMatchingGroup, SendTo, ReceiveFrom, NoMatchBehaviour)
 VALUES (32, 'Test5', NULL, NULL, 'DROP');
 INSERT INTO DoNotMatch (FirstUserId, SecondUserId)
-VALUES(31, 32)
+VALUES (31, 32)
