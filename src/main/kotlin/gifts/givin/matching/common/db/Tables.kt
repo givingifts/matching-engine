@@ -8,7 +8,7 @@ typealias DoNotMatchTable = DoNotMatch
 
 object Matches : IntIdTable() {
     val userId = integer("UserId")
-    val matchingGroup = varchar("MatchingGroup", 40)
+    val matchingGroup = varchar("MatchingGroup", 100)
     val sendTo = integer("SendTo").nullable()
     val receiveFrom = integer("ReceiveFrom").nullable()
     val isMatched = bool("IsMatched").default(false)
@@ -16,7 +16,7 @@ object Matches : IntIdTable() {
 
 object MatchingInstances : IntIdTable() {
     val done = bool("Done").default(false)
-    val matchingGroup = varchar("MatchingGroup", 10).nullable()
+    val matchingGroup = varchar("MatchingGroup", 100).nullable()
 }
 
 object DoNotMatch : IntIdTable() {
