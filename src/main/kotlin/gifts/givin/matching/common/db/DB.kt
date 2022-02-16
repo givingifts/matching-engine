@@ -100,11 +100,11 @@ object DB {
         }
     }
 
-    fun cleanupInstances() {
+    fun cleanupInstances() = transaction {
         MatchingInstancesTable.deleteAll()
     }
 
-    fun cleanupMatching() {
+    fun cleanupMatching() = transaction {
         MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) { it[MatchesTable.isMatched] = true }
     }
 }
