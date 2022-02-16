@@ -23,8 +23,8 @@ object DB {
         MatchesTable
             .slice(MatchesTable.matchingGroup)
             .select { MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull() }
-            .distinct()
             .map { it[MatchesTable.matchingGroup] }
+            .distinct()
     }
 
     fun getDoNotMatch(userId: UserId): List<UserId> {
