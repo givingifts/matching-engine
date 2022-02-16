@@ -44,7 +44,7 @@ fun match(matchingGroup: MatchingGroupId) {
     while (unmatchedUsers >= 2L) {
         if (unmatchedUsers == 2L) {
             val userWithoutSendTo = DB.getUserWithoutSendTo(matchingGroup)
-            val userWithoutReceiveFrom = DB.getUserWithoutReceiveFrom(matchingGroup, emptyList())
+            val userWithoutReceiveFrom = DB.getUserWithoutReceiveFrom(matchingGroup, listOf(userWithoutSendTo!!.userId))
             if (userWithoutSendTo != null && userWithoutReceiveFrom != null && userWithoutReceiveFrom.userId != userWithoutSendTo.userId) {
                 DB.matchUsers(userWithoutSendTo.userId, userWithoutReceiveFrom.userId)
                 unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup)
