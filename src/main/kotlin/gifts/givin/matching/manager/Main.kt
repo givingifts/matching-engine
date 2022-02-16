@@ -5,8 +5,10 @@ import gifts.givin.matching.common.MatcherSpec
 import gifts.givin.matching.common.db.DB
 import gifts.givin.matching.common.getConfig
 import mu.KotlinLogging
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
+
 
 private val logger = KotlinLogging.logger("Manager")
 
@@ -26,11 +28,12 @@ fun main(args: Array<String>) {
 
 fun matchingRound() {
     val matchingGroups = DB.getMatchingGroupsInUse().toMutableList()
+    val es = Executors.newCachedThreadPool()
     while (matchingGroups.isNotEmpty()) {
         if (DB.getNotDoneInstances() < config[MatcherSpec.max_instances]) {
             val matchingGroup = matchingGroups.removeFirst()
             DB.addInstance(matchingGroup)
-            Thread {
+            es.execute {
                 if (config[MatcherSpec.use_script]) {
                     ProcessBuilder("./start_instance.sh", matchingGroup)
                         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -40,11 +43,13 @@ fun matchingRound() {
                 } else {
                     gifts.givin.matching.matcher.main(arrayOf(matchingGroup))
                 }
-            }.start()
+            }
         } else {
             TimeUnit.MILLISECONDS.sleep(100)
         }
     }
+    es.shutdown()
+    es.awaitTermination(5, TimeUnit.MINUTES)
     DB.cleanupInstances()
     DB.cleanupMatching()
 }
