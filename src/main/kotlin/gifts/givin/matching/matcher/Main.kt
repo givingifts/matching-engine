@@ -38,6 +38,9 @@ fun markInstanceAsDone(matchingGroupId: MatchingGroupId) = transaction {
 
 fun match(matchingGroup: MatchingGroupId) {
     var unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup)
+    if (unmatchedUsers == 1L) {
+        return
+    }
     while (unmatchedUsers >= 2L) {
         if (unmatchedUsers == 2L) {
             val userWithoutSendTo = DB.getUserWithoutSendTo(matchingGroup)
