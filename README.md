@@ -82,13 +82,8 @@ This project depends on the following projects, thanks to every developer who ma
 ## Contributing
 
 You're very welcome to contribute to this project! Please note that this project uses [ktlint](https://github.com/pinterest/ktlint) to ensure consistent code.
-It runs with `./gradlew clean build`, but you can also run it independently using `./gradlew ktlintCheck`.
+It runs with `make build`, but you can also run it independently using `make run`.
 
 ## License
 
 Distributed under the  AGPL-3.0 License. See `LICENSE.md` for more information.
-
-### TODO List (PRs welcome!)
-- Tests for each stage
-- General cleanup
-- Separate matching groups into batches that can be sent to different instances to speed up bigger groups like US
