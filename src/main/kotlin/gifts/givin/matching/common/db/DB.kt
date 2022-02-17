@@ -27,7 +27,7 @@ object DB {
             .distinct()
     }
 
-    fun getDoNotMatch(userId: UserId): List<UserId> {
+    fun getDoNotMatch(userId: UserId, receiveFrom: UserId?): List<UserId> {
         val list = transaction {
             DoNotMatchTable.slice(DoNotMatchTable.secondUserId).select { DoNotMatchTable.firstUserId.eq(userId) }
                 .mapNotNull { it[DoNotMatchTable.secondUserId] }
@@ -37,7 +37,11 @@ object DB {
                 .mapNotNull { it[DoNotMatchTable.firstUserId] }
         }
 
-        return (list + secondList + userId).distinct()
+        if(receiveFrom == null) {
+            return (list + secondList + userId).distinct()
+        } else {
+            return (list + secondList + userId + receiveFrom).distinct()
+        }
     }
 
     fun matchUsers(sender: UserId, receiver: UserId) = transaction {
@@ -51,6 +55,7 @@ object DB {
 
     fun getUserWithoutSendTo(matchingGroup: MatchingGroupId): Match? = transaction {
         MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.sendTo.isNull()) }
+            .orderBy(Random())
             .limit(1)
             .mapToMatch()
             .firstOrNull()
@@ -59,6 +64,7 @@ object DB {
     fun getUserWithoutReceiveFrom(matchingGroup: MatchingGroupId, doNotSendList: List<UserId>): Match? =
         transaction {
             MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull()) and (MatchesTable.userId notInList doNotSendList) }
+                .orderBy(Random())
                 .limit(1)
                 .mapToMatch()
                 .firstOrNull()
@@ -107,4 +113,5 @@ object DB {
     fun cleanupMatching() = transaction {
         MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) { it[MatchesTable.isMatched] = true }
     }
+
 }

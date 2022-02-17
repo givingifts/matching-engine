@@ -50,10 +50,11 @@ fun match(matchingGroup: MatchingGroupId) {
                 unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup)
             }
         } else {
-            val sender = DB.getUserWithoutSendTo(matchingGroup)?.userId ?: continue
-            val doNoMatchList = DB.getDoNotMatch(sender)
+            val sender = DB.getUserWithoutSendTo(matchingGroup) ?: continue
+            val senderUserId = sender.userId
+            val doNoMatchList = DB.getDoNotMatch(senderUserId, sender.receiveFrom)
             val receiver = DB.getUserWithoutReceiveFrom(matchingGroup, doNoMatchList)?.userId ?: continue
-            DB.matchUsers(sender, receiver)
+            DB.matchUsers(senderUserId, receiver)
             unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup)
         }
     }
