@@ -9,7 +9,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
-
 private val logger = KotlinLogging.logger("Manager")
 
 lateinit var config: Config

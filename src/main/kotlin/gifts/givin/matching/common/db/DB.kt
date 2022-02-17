@@ -37,7 +37,7 @@ object DB {
                 .mapNotNull { it[DoNotMatchTable.firstUserId] }
         }
 
-        if(receiveFrom == null) {
+        if (receiveFrom == null) {
             return (list + secondList + userId).distinct()
         } else {
             return (list + secondList + userId + receiveFrom).distinct()
@@ -111,7 +111,8 @@ object DB {
     }
 
     fun cleanupMatching() = transaction {
-        MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) { it[MatchesTable.isMatched] = true }
+        MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) {
+            it[MatchesTable.isMatched] = true
+        }
     }
-
 }
