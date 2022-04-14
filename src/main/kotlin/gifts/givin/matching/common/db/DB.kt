@@ -4,6 +4,7 @@ import gifts.givin.matching.common.domain.Match
 import gifts.givin.matching.common.domain.MatchingGroupId
 import gifts.givin.matching.common.domain.UserId
 import gifts.givin.matching.common.domain.mapToMatch
+import gifts.givin.matching.matcher.droppedList
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.and
@@ -70,9 +71,9 @@ object DB {
                 .firstOrNull()
         }
 
-    fun getRandomMatch(matchingGroup: MatchingGroupId): Pair<Match, Match> {
+    fun getRandomMatch(matchingGroup: MatchingGroupId, doNotSendList: List<UserId>): Pair<Match, Match> {
         val match = transaction {
-            MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNotNull()) and (MatchesTable.sendTo.isNotNull()) }
+            MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNotNull()) and (MatchesTable.sendTo.isNotNull())) and MatchesTable.userId.notInList(droppedList) }
                 .orderBy(Random())
                 .limit(1)
                 .mapToMatch()
@@ -86,7 +87,7 @@ object DB {
     }
 
     fun getNumberOfUnmatchedUsers(matchingGroup: MatchingGroupId, droppedList: List<UserId>): Long = transaction {
-        MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull() or MatchesTable.sendTo.isNull()) and MatchesTable.userId.notInList(droppedList)) }
+        MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull() or MatchesTable.sendTo.isNull())) and MatchesTable.userId.notInList(droppedList) }
             .count()
     }
 

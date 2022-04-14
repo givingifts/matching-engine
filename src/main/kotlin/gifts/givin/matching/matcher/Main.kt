@@ -9,6 +9,7 @@ import gifts.givin.matching.common.domain.MatchingGroupId
 import gifts.givin.matching.common.domain.UserId
 import gifts.givin.matching.common.getConfig
 import mu.KotlinLogging
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import kotlin.system.exitProcess
@@ -63,35 +64,41 @@ fun match(matchingGroup: MatchingGroupId) {
                     }
                 } else if (userWithoutReceiveFrom.userId != userWithoutSendTo.userId) {
                     DB.matchUsers(userWithoutSendTo.userId, userWithoutReceiveFrom.userId)
-                    unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup, droppedList)
                 }
+                unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup, droppedList)
             }
         } else {
             val sender = DB.getUserWithoutSendTo(matchingGroup, droppedList) ?: continue
             val senderUserId = sender.userId
             val doNoMatchList = DB.getDoNotMatch(senderUserId, sender.receiveFrom, droppedList)
-            val receiver = DB.getUserWithoutReceiveFrom(matchingGroup, doNoMatchList)?.userId ?: continue
+            val receiver = DB.getUserWithoutReceiveFrom(matchingGroup, doNoMatchList)?.userId
+            if(receiver == null) {
+                droppedList.add(senderUserId)
+                DB.drop(senderUserId)
+                unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup, droppedList)
+                continue
+            }
             DB.matchUsers(senderUserId, receiver)
             unmatchedUsers = DB.getNumberOfUnmatchedUsers(matchingGroup, droppedList)
         }
     }
     if (unmatchedUsers == 1L) {
-        val withoutReceiver = DB.getUserWithoutSendTo(matchingGroup, droppedList)
-        if (withoutReceiver == null) {
-            val withoutSender = DB.getUserWithoutReceiveFrom(matchingGroup, emptyList()) ?: return
+        val withoutSender = DB.getUserWithoutSendTo(matchingGroup, droppedList)
+        if (withoutSender == null) {
+            val withoutSender = DB.getUserWithoutReceiveFrom(matchingGroup, droppedList) ?: return
             threeWayMatchWithoutSender(withoutSender, matchingGroup)
         } else {
-            if (withoutReceiver.receiveFrom == null) {
-                threeWayMatchWithoutAny(withoutReceiver.userId, matchingGroup)
+            if (withoutSender.receiveFrom == null) {
+                threeWayMatchWithoutAny(withoutSender.userId, matchingGroup)
             } else {
-                error("This should never happen, user without sendTo ${withoutReceiver.userId}. Rerun matching and tell @urielsalis")
+                error("This should never happen, user without sendTo ${withoutSender.userId}. Rerun matching and tell @urielsalis")
             }
         }
     }
 }
 
 fun threeWayMatchWithoutSender(user: Match, matchingGroup: MatchingGroupId) {
-    val randomMatch = DB.getRandomMatch(matchingGroup)
+    val randomMatch = DB.getRandomMatch(matchingGroup, droppedList)
     val originalSender = randomMatch.first
     val originalReceiver = randomMatch.second
     val originalUserSendTo = user.sendTo!!
@@ -106,7 +113,7 @@ fun threeWayMatchWithoutSender(user: Match, matchingGroup: MatchingGroupId) {
 }
 
 fun threeWayMatchWithoutAny(userId: UserId, matchingGroup: MatchingGroupId) {
-    val randomMatch = DB.getRandomMatch(matchingGroup)
+    val randomMatch = DB.getRandomMatch(matchingGroup, droppedList)
     val originalSender = randomMatch.first.userId
     val originalReceiver = randomMatch.second.userId
     /*
