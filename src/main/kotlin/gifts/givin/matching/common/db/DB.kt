@@ -73,7 +73,7 @@ object DB {
 
     fun getRandomMatch(matchingGroup: MatchingGroupId, doNotSendList: List<UserId>): Pair<Match, Match> {
         val match = transaction {
-            MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNotNull()) and (MatchesTable.sendTo.isNotNull())) and MatchesTable.userId.notInList(droppedList) }
+            MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNotNull()) and (MatchesTable.sendTo.isNotNull())) and MatchesTable.userId.notInList(doNotSendList) }
                 .orderBy(Random())
                 .limit(1)
                 .mapToMatch()
