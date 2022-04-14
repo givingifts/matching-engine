@@ -27,7 +27,7 @@ object DB {
             .distinct()
     }
 
-    fun getDoNotMatch(userId: UserId, receiveFrom: UserId?): List<UserId> {
+    fun getDoNotMatch(userId: UserId, receiveFrom: UserId?, droppedList: List<UserId>): List<UserId> {
         val list = transaction {
             DoNotMatchTable.slice(DoNotMatchTable.secondUserId).select { DoNotMatchTable.firstUserId.eq(userId) }
                 .mapNotNull { it[DoNotMatchTable.secondUserId] }
@@ -38,9 +38,9 @@ object DB {
         }
 
         if (receiveFrom == null) {
-            return (list + secondList + userId).distinct()
+            return (list + secondList + userId + droppedList).distinct()
         } else {
-            return (list + secondList + userId + receiveFrom).distinct()
+            return (list + secondList + userId + receiveFrom + droppedList).distinct()
         }
     }
 
@@ -53,8 +53,8 @@ object DB {
         }
     }
 
-    fun getUserWithoutSendTo(matchingGroup: MatchingGroupId): Match? = transaction {
-        MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.sendTo.isNull()) }
+    fun getUserWithoutSendTo(matchingGroup: MatchingGroupId, droppedList: List<UserId>): Match? = transaction {
+        MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.sendTo.isNull()) and MatchesTable.userId.notInList(droppedList) }
             .orderBy(Random())
             .limit(1)
             .mapToMatch()
@@ -85,8 +85,8 @@ object DB {
         MatchesTable.select { MatchesTable.userId eq userId }.limit(1).mapToMatch().first()
     }
 
-    fun getNumberOfUnmatchedUsers(matchingGroup: MatchingGroupId): Long = transaction {
-        MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull() or MatchesTable.sendTo.isNull()) }
+    fun getNumberOfUnmatchedUsers(matchingGroup: MatchingGroupId, droppedList: List<UserId>): Long = transaction {
+        MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull() or MatchesTable.sendTo.isNull()) and MatchesTable.userId.notInList(droppedList)) }
             .count()
     }
 
@@ -113,6 +113,28 @@ object DB {
     fun cleanupMatching() = transaction {
         MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) {
             it[MatchesTable.isMatched] = true
+        }
+    }
+
+    fun drop(id: UserId) {
+        transaction {
+            MatchesTable.update({ MatchesTable.sendTo.eq(id) }) {
+                it[MatchesTable.isMatched] = false
+                it[MatchesTable.sendTo] = null
+            }
+        }
+        transaction {
+            MatchesTable.update({ MatchesTable.receiveFrom.eq(id) }) {
+                it[MatchesTable.isMatched] = false
+                it[MatchesTable.receiveFrom] = null
+            }
+        }
+        transaction {
+            MatchesTable.update({ MatchesTable.userId.eq(id) }) {
+                it[MatchesTable.isMatched] = false
+                it[MatchesTable.receiveFrom] = null
+                it[MatchesTable.sendTo] = null
+            }
         }
     }
 }
