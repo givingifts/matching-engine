@@ -4,7 +4,6 @@ import gifts.givin.matching.common.domain.Match
 import gifts.givin.matching.common.domain.MatchingGroupId
 import gifts.givin.matching.common.domain.UserId
 import gifts.givin.matching.common.domain.mapToMatch
-import gifts.givin.matching.matcher.droppedList
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.and
@@ -16,8 +15,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
 object DB {
+    var initialized = false
+
     fun connect(url: String, username: String, password: String) {
-        Database.connect(url, "com.mysql.cj.jdbc.Driver", username, password)
+        if(!initialized) {
+            Database.connect(url, "com.mysql.cj.jdbc.Driver", username, password)
+            initialized = true
+        }
     }
 
     fun getMatchingGroupsInUse(): List<String> = transaction {
@@ -38,10 +42,10 @@ object DB {
                 .mapNotNull { it[DoNotMatchTable.firstUserId] }
         }
 
-        if (receiveFrom == null) {
-            return (list + secondList + userId + droppedList).distinct()
+        return if (receiveFrom == null) {
+            (list + secondList + userId + droppedList).distinct()
         } else {
-            return (list + secondList + userId + receiveFrom + droppedList).distinct()
+            (list + secondList + userId + receiveFrom + droppedList).distinct()
         }
     }
 

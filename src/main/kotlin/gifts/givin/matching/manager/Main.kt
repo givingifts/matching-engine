@@ -48,7 +48,7 @@ fun matchingRound() {
         }
     }
     es.shutdown()
-    es.awaitTermination(5, TimeUnit.MINUTES)
+    es.awaitTermination(100, TimeUnit.MINUTES)
     DB.cleanupInstances()
     DB.cleanupMatching()
 }
