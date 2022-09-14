@@ -1,13 +1,9 @@
 package gifts.givin.matching.common.db
 
-import gifts.givin.matching.common.domain.Match
 import gifts.givin.matching.common.domain.MatchingGroupId
 import gifts.givin.matching.common.domain.UserId
 import gifts.givin.matching.common.domain.mapToMatch
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Random
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insert
@@ -22,7 +18,7 @@ object DB {
     var initialized = false
 
     fun connect(url: String, username: String, password: String) {
-        if(!initialized) {
+        if (!initialized) {
             Database.connect(url, "com.mysql.cj.jdbc.Driver", username, password)
             println("Current transaction isolation level: ${TransactionManager.manager.defaultIsolationLevel}")
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
@@ -31,7 +27,6 @@ object DB {
     }
 
     fun getMatchingGroupsInUse(): List<String> = transaction {
-        addLogger(StdOutSqlLogger)
         MatchesTable
             .slice(MatchesTable.matchingGroup)
             .select { MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull() }
@@ -39,85 +34,30 @@ object DB {
             .distinct()
     }
 
-    fun getDoNotMatch(userId: UserId, receiveFrom: UserId?, droppedList: List<UserId>): List<UserId> {
-        val list = transaction {
-            addLogger(StdOutSqlLogger)
-            DoNotMatchTable.slice(DoNotMatchTable.secondUserId).select { DoNotMatchTable.firstUserId.eq(userId) }
-                .mapNotNull { it[DoNotMatchTable.secondUserId] }
-        }
-        val secondList = transaction {
-            addLogger(StdOutSqlLogger)
-            DoNotMatchTable.slice(DoNotMatchTable.firstUserId).select { DoNotMatchTable.secondUserId.eq(userId) }
-                .mapNotNull { it[DoNotMatchTable.firstUserId] }
-        }
-
-        return if (receiveFrom == null) {
-            (list + secondList + userId + droppedList).distinct()
-        } else {
-            (list + secondList + userId + receiveFrom + droppedList).distinct()
-        }
-    }
-
-    fun matchUsers(sender: UserId, receiver: UserId) = transaction {
-        addLogger(StdOutSqlLogger)
-        MatchesTable.update({ MatchesTable.userId eq sender }) {
+    fun matchUsers(sender: UserId, receiver: UserId, matchingGroup: MatchingGroupId) = transaction {
+        MatchesTable.update({ MatchesTable.userId eq sender and MatchesTable.matchingGroup.eq(matchingGroup) }) {
             it[MatchesTable.sendTo] = receiver
         }
-        MatchesTable.update({ MatchesTable.userId eq receiver }) {
+        MatchesTable.update({ MatchesTable.userId eq receiver and MatchesTable.matchingGroup.eq(matchingGroup) }) {
             it[MatchesTable.receiveFrom] = sender
         }
     }
 
-    fun getUserWithoutSendTo(matchingGroup: MatchingGroupId, droppedList: List<UserId>): Match? = transaction {
-        addLogger(StdOutSqlLogger)
-        MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.sendTo.isNull()) and MatchesTable.userId.notInList(droppedList) }
-            .orderBy(Random())
-            .limit(1)
-            .mapToMatch()
-            .firstOrNull()
-    }
-
-    fun getUserWithoutReceiveFrom(matchingGroup: MatchingGroupId, doNotSendList: List<UserId>): Match? =
-        transaction {
-            addLogger(StdOutSqlLogger)
-            MatchesTable.select { (MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull()) and (MatchesTable.userId notInList doNotSendList) }
-                .orderBy(Random())
-                .limit(1)
-                .mapToMatch()
-                .firstOrNull()
-        }
-
-    fun getRandomMatch(matchingGroup: MatchingGroupId, doNotSendList: List<UserId>): Pair<Match, Match> {
-        val match = transaction {
-            addLogger(StdOutSqlLogger)
-            MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNotNull()) and (MatchesTable.sendTo.isNotNull())) and MatchesTable.userId.notInList(doNotSendList) }
-                .orderBy(Random())
-                .limit(1)
-                .mapToMatch()
-                .first()
-        }
-        return match to getMatch(match.sendTo!!)
-    }
-
-    fun getMatch(userId: UserId): Match = transaction {
-        addLogger(StdOutSqlLogger)
-        MatchesTable.select { MatchesTable.userId eq userId }.limit(1).mapToMatch().first()
-    }
-
-    fun getNumberOfUnmatchedUsers(matchingGroup: MatchingGroupId, droppedList: List<UserId>): Long = transaction {
-        addLogger(StdOutSqlLogger)
-        MatchesTable.select { ((MatchesTable.matchingGroup eq matchingGroup) and (MatchesTable.receiveFrom.isNull() or MatchesTable.sendTo.isNull())) and MatchesTable.userId.notInList(droppedList) }
-            .count()
-    }
-
     fun getNumberOfUnmatchedUsers(): Long = transaction {
-        addLogger(StdOutSqlLogger)
         MatchesTable.select { MatchesTable.isMatched eq false }
             .count()
     }
 
+    fun getNumberOfUnmatchedUsers(matchingGroup: MatchingGroupId): Long = transaction {
+        MatchesTable.select {
+            (MatchesTable.sendTo.isNull() or MatchesTable.receiveFrom.isNull()) and MatchesTable.matchingGroup.eq(
+                matchingGroup
+            )
+        }
+            .count()
+    }
+
     fun getNotDoneInstances(): Long = transaction {
-        addLogger(StdOutSqlLogger)
         MatchingInstancesTable.select { MatchingInstancesTable.done eq false }.count()
     }
 
@@ -129,39 +69,61 @@ object DB {
     }
 
     fun cleanupInstances() = transaction {
-        addLogger(StdOutSqlLogger)
         MatchingInstancesTable.deleteAll()
     }
 
     fun cleanupMatching() = transaction {
-        addLogger(StdOutSqlLogger)
         MatchesTable.update({ MatchesTable.sendTo.isNotNull() and MatchesTable.receiveFrom.isNotNull() }) {
             it[MatchesTable.isMatched] = true
         }
     }
 
-    fun drop(id: UserId) {
+    fun getAllUsers(matchingGroup: MatchingGroupId) = transaction {
+        MatchesTable.select { MatchesTable.matchingGroup.eq(matchingGroup) }
+            .orderBy(MatchesTable.userId)
+            .mapToMatch()
+    }
+
+    fun getAllDoNotMatch(matchingGroup: MatchingGroupId) = transaction {
+        DoNotMatchTable
+            .select {
+                DoNotMatchTable.firstUserId.inSubQuery(
+                    MatchesTable.slice(MatchesTable.userId).select { MatchesTable.matchingGroup.eq(matchingGroup) }
+                ) or DoNotMatchTable.secondUserId.inSubQuery(
+                    MatchesTable.slice(MatchesTable.userId).select { MatchesTable.matchingGroup.eq(matchingGroup) }
+                )
+            }
+            .map { it[DoNotMatchTable.firstUserId] to it[DoNotMatchTable.secondUserId] }
+            .groupBy { it.first }
+            .mapValues { it.value.map { it.second } }
+    }
+
+    fun drop(id: UserId, matchingGroup: MatchingGroupId) {
         transaction {
-            addLogger(StdOutSqlLogger)
-            MatchesTable.update({ MatchesTable.sendTo.eq(id) }) {
+            MatchesTable.update({ MatchesTable.sendTo.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
                 it[MatchesTable.isMatched] = false
                 it[MatchesTable.sendTo] = null
             }
         }
         transaction {
-            addLogger(StdOutSqlLogger)
-            MatchesTable.update({ MatchesTable.receiveFrom.eq(id) }) {
+            MatchesTable.update({ MatchesTable.receiveFrom.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
                 it[MatchesTable.isMatched] = false
                 it[MatchesTable.receiveFrom] = null
             }
         }
         transaction {
-            addLogger(StdOutSqlLogger)
-            MatchesTable.update({ MatchesTable.userId.eq(id) }) {
+            MatchesTable.update({ MatchesTable.userId.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
                 it[MatchesTable.isMatched] = false
                 it[MatchesTable.receiveFrom] = null
                 it[MatchesTable.sendTo] = null
             }
         }
     }
+
+    fun markInstancesAsDone(matchingGroupId: MatchingGroupId) = transaction {
+        MatchingInstancesTable.update({ MatchingInstancesTable.matchingGroup eq matchingGroupId }) {
+            it[MatchingInstancesTable.done] = true
+        }
+    }
+
 }
