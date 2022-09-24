@@ -60,17 +60,13 @@ There you can set all your credentials.
 ## How it works
 Matching its done in stages, where there is a "manager" and multiple "matchers" that can either be threads or separate instances.  
 - The manager starts first, getting all matching groups, clearing the temp tables and doing some initialization  
-- Premium matching goes first, doing a single round of matching of all groups except Worldwide.  
-- We then apply the chosen premium behaviour for each user (match with non premium users, match with worldwide premium, drop from the exchange)
-- After that we run worldwide premium matching
-- We then cleanup any Premium user that is not being matched with non-premium users by dropping them from the exchange
-- Matching is then done for each domestic group
-- Some checks and quick fixes are apply after each matching, to match single users and try to make it so users send and receive from different users
-- Any unmatched users are then promoted to their international group
-- Matching is done for all international groups
-- Any unmatched users are then promoted to Worldwide
-- Matching is done for Worldwide
-- At the end we generate some stats and checks for manual review!
+- The manager then starts one instance of the matcher per matching group
+- Each instance of the matcher will then get all users into memory, sorted randomly
+- Each user will then be assigned a sequence
+- Each user its checked to see they are not matched to someone in their do not match list according to the sequence
+- If they are, we search for a swap with another user
+- If no swap is possible, we drop them according to their preferences
+- Once all users are matched, the result is written into the DB 
 
 ## Built with
 
@@ -82,13 +78,8 @@ This project depends on the following projects, thanks to every developer who ma
 ## Contributing
 
 You're very welcome to contribute to this project! Please note that this project uses [ktlint](https://github.com/pinterest/ktlint) to ensure consistent code.
-It runs with `./gradlew clean build`, but you can also run it independently using `./gradlew ktlintCheck`.
+It runs with `make build`, but you can also run it independently using `make run`.
 
 ## License
 
 Distributed under the  AGPL-3.0 License. See `LICENSE.md` for more information.
-
-### TODO List (PRs welcome!)
-- Tests for each stage
-- General cleanup
-- Separate matching groups into batches that can be sent to different instances to speed up bigger groups like US

@@ -3,5 +3,4 @@ matcher:
   db_user: "user"
   db_pass: "password"
   max_instances: 10
-  instances_percentage: 100
   use_script: false
