@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.5.10"
     application
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
 }
@@ -22,18 +22,14 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("mysql:mysql-connector-java:8.0.30")
+    implementation("mysql:mysql-connector-java:8.0.28")
 
     implementation("com.uchuhimo:konf:1.1.2")
 
-    implementation("io.github.microutils:kotlin-logging-jvm:3.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.0")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.10")
+    implementation("org.slf4j:slf4j-simple:1.7.29")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
-}
-
-tasks.test {
-    useJUnitPlatform()
 }

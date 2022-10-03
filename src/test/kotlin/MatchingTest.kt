@@ -33,10 +33,16 @@ class MatchingTest {
     }
 
     @Test
-    fun shouldNotMatch2UsersThatHaveDoNotMatch() {
+    fun shouldMatch2UsersThatHaveDoNotMatch() {
         val repo = TestMatchRepository(listOf(emptyMatch(1), emptyMatch(2)), mapOf(1 to listOf(2)))
         Matcher(repo, "Test").doMatchingRound()
-        assertEquals(2, repo.droppedUsers.size)
+        assertEquals(0, repo.droppedUsers.size)
+        assertEquals(2, repo.matchesMadeReceivers.size)
+        assertEquals(2, repo.matchesMadeSenders.size)
+        assertEquals(1, repo.matchesMadeSenders[2])
+        assertEquals(2, repo.matchesMadeSenders[1])
+        assertEquals(1, repo.matchesMadeReceivers[2])
+        assertEquals(2, repo.matchesMadeReceivers[1])
     }
 
     @Test
@@ -52,9 +58,9 @@ class MatchingTest {
     fun shouldMatch3UsersWithDoNotMatch() {
         val repo = TestMatchRepository(listOf(emptyMatch(1), emptyMatch(2), emptyMatch(3)), mapOf(1 to listOf(2)))
         Matcher(repo, "Test").doMatchingRound()
-        assertEquals(1, repo.droppedUsers.size)
-        assertEquals(1, repo.matchesMadeReceivers.size)
-        assertEquals(1, repo.matchesMadeSenders.size)
+        assertEquals(0, repo.droppedUsers.size)
+        assertEquals(3, repo.matchesMadeReceivers.size)
+        assertEquals(3, repo.matchesMadeSenders.size)
     }
 
 

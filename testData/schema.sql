@@ -1,5 +1,5 @@
 CREATE
-USER 'matching'@'%' IDENTIFIED WITH mysql_native_password by 'matching';
+USER 'matching'@'%' IDENTIFIED BY 'matching';
 GRANT ALL
 ON *.* TO 'matching'@'%';
 FLUSH
@@ -58,13 +58,13 @@ CREATE INDEX idx_second_user_id
 -- USA: 4 users matched without warning
 -- Group 1: Users matched to each other
 -- Group 2: 1 User not matched
--- Worldwide: 2 users matched, 1 dropped
--- UK: 3 users matched, 1 dropped
+-- Worldwide: 3 users matched with warning
+-- UK: 4 users matched with warning
 -- Test: 1 User not matched
 -- Test2: 1 User not matched
 -- Test3: 1 User not matched
 -- Test4: 1 User not matched
--- Test5: 2 users dropped
+-- Test5: 2 users matched without warning
 
 
 INSERT INTO Matches (UserId, MatchingGroup, SendTo, ReceiveFrom)

@@ -4,8 +4,8 @@ import gifts.givin.matching.common.domain.UserId
 import gifts.givin.matching.matcher.domain.MatchRepository
 
 class TestMatchRepository(val matches: List<Match>, val doNotMatch: Map<UserId, List<UserId>>) : MatchRepository {
-    var matchesMadeSenders = mutableMapOf<UserId, UserId>()
-    var matchesMadeReceivers = mutableMapOf<UserId, UserId>()
+    val matchesMadeSenders = mutableMapOf<UserId, UserId>()
+    val matchesMadeReceivers = mutableMapOf<UserId, UserId>()
     val droppedUsers = mutableListOf<UserId>()
 
     override fun getAllUsers(matchingGroupId: MatchingGroupId): List<Match> = matches
@@ -19,10 +19,6 @@ class TestMatchRepository(val matches: List<Match>, val doNotMatch: Map<UserId, 
 
     override fun drop(user: UserId, matchingGroupId: MatchingGroupId) {
         droppedUsers.add(user)
-        matchesMadeReceivers.remove(user)
-        matchesMadeSenders.remove(user)
-        matchesMadeSenders = matchesMadeSenders.filterValues { it != user }.toMutableMap()
-        matchesMadeReceivers = matchesMadeReceivers.filterValues { it != user }.toMutableMap()
     }
 
     override fun markInstancesAsDone(matchingGroupId: MatchingGroupId) {
