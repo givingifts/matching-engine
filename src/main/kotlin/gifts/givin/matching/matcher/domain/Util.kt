@@ -3,7 +3,7 @@ package gifts.givin.matching.matcher.domain
 import gifts.givin.matching.common.domain.UserId
 import mu.KLogger
 
-fun Map<UserId, List<UserId>>.trySwap(allUsers: IntArray, userId: UserId, logger: KLogger) {
+fun Map<UserId, List<UserId>>.trySwap(allUsers: IntArray, userId: UserId, logger: KLogger): Boolean {
     val indexOfUser = allUsers.indexOf(userId)
     allUsers.forEachIndexed { indexOfCandidate, candidate ->
         if (!isInDoNotMatch(userId, candidate)
@@ -15,10 +15,11 @@ fun Map<UserId, List<UserId>>.trySwap(allUsers: IntArray, userId: UserId, logger
             logger.info("Do not match: Found suitable candidate, swapping $userId with $candidate")
             allUsers[indexOfUser] = candidate
             allUsers[indexOfCandidate] = userId
-            return
+            return true
         }
     }
-    logger.info("Do not match: Found no suitable candidates, $userId is matched with someone from their do not match list!")
+    logger.info("Do not match: Found no suitable candidates, $userId is being dropped!")
+    return false
 }
 
 fun IntArray.getNextUser(index: Int): UserId {

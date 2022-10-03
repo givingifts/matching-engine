@@ -1,6 +1,7 @@
 package gifts.givin.matching.matcher.domain
 
 import gifts.givin.matching.common.domain.MatchingGroupId
+import gifts.givin.matching.common.domain.UserId
 import mu.KLogger
 import mu.KotlinLogging
 import java.time.Instant
@@ -22,10 +23,14 @@ class Matcher(
         repository.markInstancesAsDone(matchingGroupId)
 
         val numberOfUnmatchedUsers = repository.getNumberOfUnmatchedUsers(matchingGroupId)
-        logger.info("Matcher: Matched $matchingGroupId, Matched users: ${matchedUsers.size - numberOfUnmatchedUsers}, not matched: $numberOfUnmatchedUsers")
+        logger.info("Matcher: Matched $matchingGroupId, Matched users: ${matchedUsers.size}, not matched: $numberOfUnmatchedUsers")
     }
 
     private fun matchUsersWithEachOther(matchedUsers: IntArray) {
+        if (matchedUsers.size == 2) {
+            repository.match(matchedUsers.first(), matchedUsers.last(), matchingGroupId)
+            repository.match(matchedUsers.last(), matchedUsers.first(), matchingGroupId)
+        }
         if (matchedUsers.size > 2) {
             matchedUsers.forEachIndexed { index, userId ->
                 repository.match(userId, matchedUsers.getNextUser(index), matchingGroupId)
@@ -35,7 +40,7 @@ class Matcher(
 
     private fun getMatches(): IntArray {
         // Get all users
-        val allUsers = repository.getAllUsers(matchingGroupId).map { it.userId }.toIntArray()
+        var allUsers = repository.getAllUsers(matchingGroupId).map { it.userId }.toIntArray()
 
         // No users = nothing to do!
         if (allUsers.isEmpty()) {
@@ -50,10 +55,16 @@ class Matcher(
             return allUsers
         }
 
+        val doNotMatch = repository.getAllDoNotMatch(matchingGroupId)
+
         // When we have 2 users, match them together
         if (allUsers.size == 2) {
             val firstUser = allUsers.first()
             val secondUser = allUsers.last()
+            if (doNotMatch.isInDoNotMatch(firstUser, secondUser)) {
+                logger.info("Matching result: Only 2 users (${firstUser},  ${secondUser}) to match, but they are in do not match. Dropping them")
+                return intArrayOf()
+            }
             repository.match(firstUser, secondUser, matchingGroupId)
             repository.match(secondUser, firstUser, matchingGroupId)
             logger.info("Matching result: Only 2 users (${firstUser},  ${secondUser}) to match, matching them together")
@@ -62,17 +73,33 @@ class Matcher(
 
         shuffleUsers(allUsers)
 
-        val doNotMatch = repository.getAllDoNotMatch(matchingGroupId)
-
         // Check against do not match list
-        for (i in allUsers.indices) {
-            val firstUser = allUsers[i]
-            val nextUser = allUsers.getNextUser(i)
-            val previousUser = allUsers.getPreviousUser(i)
+        var continueChecking = true
+        while (continueChecking) {
+            continueChecking = false
+            val usersToRemove = mutableListOf<UserId>()
+            for (i in allUsers.indices) {
+                val firstUser = allUsers[i]
+                val nextUser = allUsers.getNextUser(i)
+                val previousUser = allUsers.getPreviousUser(i)
 
-            if (doNotMatch.isInDoNotMatch(firstUser, nextUser) || doNotMatch.isInDoNotMatch(firstUser, previousUser)) {
-                doNotMatch.trySwap(allUsers, firstUser, logger)
+                if (doNotMatch.isInDoNotMatch(firstUser, nextUser) || doNotMatch.isInDoNotMatch(
+                        firstUser,
+                        previousUser
+                    )
+                ) {
+                    val result = doNotMatch.trySwap(allUsers, firstUser, logger)
+                    if (!result) {
+                        val key = doNotMatch
+                            .filterKeys { it == firstUser || it == nextUser || it == previousUser } // From all potential users
+                            .maxBy { it.value.size } // Find the one most likely to have conflicts
+                        usersToRemove.add(key.key) // And drop that user
+                        continueChecking = true
+                        break
+                    }
+                }
             }
+            allUsers = allUsers.filter { !usersToRemove.contains(it) }.toIntArray()
         }
         return allUsers
     }

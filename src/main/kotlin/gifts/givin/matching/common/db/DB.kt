@@ -100,18 +100,6 @@ object DB {
 
     fun drop(id: UserId, matchingGroup: MatchingGroupId) {
         transaction {
-            MatchesTable.update({ MatchesTable.sendTo.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
-                it[MatchesTable.isMatched] = false
-                it[MatchesTable.sendTo] = null
-            }
-        }
-        transaction {
-            MatchesTable.update({ MatchesTable.receiveFrom.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
-                it[MatchesTable.isMatched] = false
-                it[MatchesTable.receiveFrom] = null
-            }
-        }
-        transaction {
             MatchesTable.update({ MatchesTable.userId.eq(id) and MatchesTable.matchingGroup.eq(matchingGroup) }) {
                 it[MatchesTable.isMatched] = false
                 it[MatchesTable.receiveFrom] = null
