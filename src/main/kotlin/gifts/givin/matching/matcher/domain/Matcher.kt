@@ -15,15 +15,18 @@ class Matcher(
 
     fun doMatchingRound() {
         logger.info("Matcher: Matching $matchingGroupId")
-        val matchedUsers = getMatches()
+        repository.inTransaction { commitFn ->
+            val matchedUsers = getMatches()
+            matchUsersWithEachOther(matchedUsers)
 
-        matchUsersWithEachOther(matchedUsers)
+            commitFn()
+            verify()
+            repository.markInstancesAsDone(matchingGroupId)
 
-        verify()
-        repository.markInstancesAsDone(matchingGroupId)
+            val numberOfUnmatchedUsers = repository.getNumberOfUnmatchedUsers(matchingGroupId)
+            logger.info("Matcher: Matched $matchingGroupId, Matched users: ${matchedUsers.size}, not matched: $numberOfUnmatchedUsers")
+        }
 
-        val numberOfUnmatchedUsers = repository.getNumberOfUnmatchedUsers(matchingGroupId)
-        logger.info("Matcher: Matched $matchingGroupId, Matched users: ${matchedUsers.size}, not matched: $numberOfUnmatchedUsers")
     }
 
     private fun matchUsersWithEachOther(matchedUsers: IntArray) {
@@ -63,6 +66,8 @@ class Matcher(
             val secondUser = allUsers.last()
             if (doNotMatch.isInDoNotMatch(firstUser, secondUser)) {
                 logger.info("Matching result: Only 2 users (${firstUser},  ${secondUser}) to match, but they are in do not match. Dropping them")
+                repository.drop(firstUser, matchingGroupId)
+                repository.drop(secondUser, matchingGroupId)
                 return intArrayOf()
             }
             repository.match(firstUser, secondUser, matchingGroupId)
@@ -94,6 +99,7 @@ class Matcher(
                             .filterKeys { it == firstUser || it == nextUser || it == previousUser } // From all potential users
                             .maxBy { it.value.size } // Find the one most likely to have conflicts
                         usersToRemove.add(key.key) // And drop that user
+                        repository.drop(key.key, matchingGroupId)
                         continueChecking = true
                         break
                     }

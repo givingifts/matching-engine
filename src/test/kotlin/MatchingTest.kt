@@ -53,8 +53,8 @@ class MatchingTest {
         val repo = TestMatchRepository(listOf(emptyMatch(1), emptyMatch(2), emptyMatch(3)), mapOf(1 to listOf(2)))
         Matcher(repo, "Test").doMatchingRound()
         assertEquals(1, repo.droppedUsers.size)
-        assertEquals(1, repo.matchesMadeReceivers.size)
-        assertEquals(1, repo.matchesMadeSenders.size)
+        assertEquals(2, repo.matchesMadeReceivers.size)
+        assertEquals(2, repo.matchesMadeSenders.size)
     }
 
 

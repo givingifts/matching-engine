@@ -11,4 +11,5 @@ interface MatchRepository {
     fun drop(user: UserId, matchingGroupId: MatchingGroupId)
     fun markInstancesAsDone(matchingGroupId: MatchingGroupId)
     fun getNumberOfUnmatchedUsers(matchingGroupId: MatchingGroupId): Long
+    fun inTransaction(function: (() -> Unit) -> Unit)
 }

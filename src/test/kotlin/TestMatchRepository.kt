@@ -34,6 +34,10 @@ class TestMatchRepository(val matches: List<Match>, val doNotMatch: Map<UserId, 
         return 0
     }
 
+    override fun inTransaction(function: (() -> Unit) -> Unit) {
+        function {}
+    }
+
     fun cleanup() {
         matchesMadeSenders.clear()
         matchesMadeReceivers.clear()
